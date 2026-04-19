@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CoCLEAR - Smart Hearing Aid Monitoring System">
+    <meta name="theme-color" content="#0A4D68">
+    <title>CoCLEAR | Hearing Health Monitor</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite">
+        <div class="loading-content">
+            <div class="loading-icon">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" />
+                    <path d="M30 50 Q40 30, 50 50 T70 50" />
+                </svg>
+            </div>
+            <h2>CoCLEAR</h2>
+            <p>Initializing health monitor...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container" style="display: none;">
+        
+        <!-- Header -->
+        <header class="app-header" role="banner">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M15 20 Q20 12, 25 20 T30 20" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <h1>CoCLEAR</h1>
+                </div>
+                <div class="connection-status" role="status" aria-live="polite">
+                    <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-navigation" role="tablist" aria-label="Main navigation">
+            <button class="tab-button active" role="tab" aria-selected="true" aria-controls="dashboard-panel" id="tab-dashboard" data-tab="dashboard">
+                <span class="tab-icon" aria-hidden="true">📊</span>
+                <span>Dashboard</span>
+            </button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="history-panel" id="tab-history" data-tab="history">
+                <span class="tab-icon" aria-hidden="true">📋</span>
+                <span>History</span>
+            </button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="report-panel" id="tab-report" data-tab="report">
+                <span class="tab-icon" aria-hidden="true">📈</span>
+                <span>Report</span>
+            </button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="settings-panel" id="tab-settings" data-tab="settings">
+                <span class="tab-icon" aria-hidden="true">⚙️</span>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Dashboard Panel -->
+            <section id="dashboard-panel" class="panel active" role="tabpanel" aria-labelledby="tab-dashboard">
+                
+                <!-- Primary Metrics -->
+                <div class="metrics-grid">
+                    
+                    <!-- Noise Level Card (Featured) -->
+                    <div class="metric-card featured" id="noiseLevelCard">
+                        <div class="card-header">
+                            <h2>Current Noise Level</h2>
+                            <span class="update-time" id="noiseUpdateTime" aria-live="polite">--</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="noise-display">
+                                <div class="noise-value" id="noiseValue" aria-live="polite" aria-atomic="true">
+                                    <span class="value-number">--</span>
+                                    <span class="value-unit">dB</span>
+                                </div>
+                                <div class="noise-label" id="noiseLabel">Measuring...</div>
+                            </div>
+                            <div class="noise-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0" aria-label="Noise level indicator">
+                                <div class="noise-bar" id="noiseBar"></div>
+                                <div class="noise-thresholds" aria-hidden="true">
+                                    <span class="threshold" style="left: 58.33%;" title="70 dB - Caution">70</span>
+                                    <span class="threshold" style="left: 70.83%;" title="85 dB - Dangerous">85</span>
+                                    <span class="threshold warning" style="left: 83.33%;" title="100 dB - Immediate Alert">100</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Volume Card -->
+                    <div class="metric-card">
+                        <div class="card-header">
+                            <h3>Volume Level</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-display">
+                                <div class="stat-icon volume-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
+                                        <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <div class="stat-value">
+                                    <span id="volumeValue" aria-live="polite">--</span>
+                                    <span class="stat-unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Battery Card -->
+                    <div class="metric-card">
+                        <div class="card-header">
+                            <h3>Battery</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-display">
+                                <div class="battery-icon" id="batteryIcon" aria-hidden="true">
+                                    <div class="battery-body">
+                                        <div class="battery-level" id="batteryLevel"></div>
+                                    </div>
+                                    <div class="battery-tip"></div>
+                                </div>
+                                <div class="stat-value">
+                                    <span id="batteryValue" aria-live="polite">--</span>
+                                    <span class="stat-unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device Mode Card -->
+                    <div class="metric-card">
+                        <div class="card-header">
+                            <h3>Device Mode</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-display">
+                                <div class="stat-icon mode-icon" aria-hidden="true">⚡</div>
+                                <div class="stat-value mode-value">
+                                    <span id="modeValue" aria-live="polite">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Health Risk Score -->
+                <div class="risk-score-section">
+                    <div class="risk-card">
+                        <h2>Daily Hearing Risk Score</h2>
+                        <div class="risk-content">
+                            <div class="risk-circle-container">
+                                <svg class="risk-circle" viewBox="0 0 200 200" aria-hidden="true">
+                                    <circle cx="100" cy="100" r="85" class="risk-circle-bg"/>
+                                    <circle cx="100" cy="100" r="85" class="risk-circle-progress" id="riskCircle"/>
+                                </svg>
+                                <div class="risk-score-display">
+                                    <span class="risk-score-value" id="riskScore" aria-live="polite">0</span>
+                                    <span class="risk-score-max">/100</span>
+                                </div>
+                            </div>
+                            <div class="risk-details">
+                                <div class="risk-status" id="riskStatus" role="status" aria-live="polite">
+                                    <span class="status-badge">Safe</span>
+                                </div>
+                                <div class="risk-stats">
+                                    <div class="risk-stat">
+                                        <span class="risk-stat-label">Avg. Exposure</span>
+                                        <span class="risk-stat-value" id="avgExposure">-- dB</span>
+                                    </div>
+                                    <div class="risk-stat">
+                                        <span class="risk-stat-label">High Noise Time</span>
+                                        <span class="risk-stat-value" id="highNoiseTime">0 min</span>
+                                    </div>
+                                    <div class="risk-stat">
+                                        <span class="risk-stat-label">Peak Noise</span>
+                                        <span class="risk-stat-value" id="peakNoise">-- dB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Noise Trend Chart -->
+                <div class="chart-section">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h2>Noise Exposure Timeline</h2>
+                            <select id="chartTimeRange" class="time-range-select" aria-label="Select time range">
+                                <option value="1h">Last Hour</option>
+                                <option value="6h">Last 6 Hours</option>
+                                <option value="24h" selected>Last 24 Hours</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="noiseChart" role="img" aria-label="Noise exposure chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- History Panel -->
+            <section id="history-panel" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+                <div class="panel-header">
+                    <h2>Alert History</h2>
+                    <button id="clearHistoryBtn" class="btn-secondary" aria-label="Clear all alert history">Clear All</button>
+                </div>
+                <div id="alertHistoryContainer" class="alert-history">
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">✓</div>
+                        <p>No alerts recorded</p>
+                        <small>Your hearing environment has been safe</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Report Panel -->
+            <section id="report-panel" class="panel" role="tabpanel" aria-labelledby="tab-report" hidden>
+                <div class="panel-header">
+                    <h2>Daily Report</h2>
+                    <button id="generateReportBtn" class="btn-primary">Generate Today's Report</button>
+                </div>
+                <div id="reportContainer" class="report-container">
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">📊</div>
+                        <p>No report generated yet</p>
+                        <small>Click "Generate Today's Report" to create a summary</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Panel -->
+            <section id="settings-panel" class="panel" role="tabpanel" aria-labelledby="tab-settings" hidden>
+                <div class="settings-container">
+                    
+                    <div class="settings-section">
+                        <h2>API Configuration</h2>
+                        <div class="setting-item">
+                            <label for="channelIdInput">ThingSpeak Channel ID</label>
+                            <input type="text" id="channelIdInput" placeholder="Enter Channel ID" aria-describedby="channelIdHelp">
+                            <small id="channelIdHelp">Your ThingSpeak channel identifier</small>
+                        </div>
+                        <div class="setting-item">
+                            <label for="apiKeyInput">Read API Key</label>
+                            <input type="password" id="apiKeyInput" placeholder="Enter API Key" aria-describedby="apiKeyHelp">
+                            <small id="apiKeyHelp">Your ThingSpeak read API key</small>
+                        </div>
+                        <button id="saveConfigBtn" class="btn-primary">Save Configuration</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h2>Notification Settings</h2>
+                        <div class="setting-item toggle-item">
+                            <div>
+                                <label for="notificationsToggle">Enable Notifications</label>
+                                <small>Receive alerts for dangerous noise levels</small>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notificationsToggle" aria-describedby="notificationsHelp">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item toggle-item">
+                            <div>
+                                <label for="dailyReportToggle">Daily Reports</label>
+                                <small>Receive daily hearing exposure summary</small>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="dailyReportToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <button id="requestNotificationBtn" class="btn-secondary">Request Notification Permission</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h2>Alert Thresholds</h2>
+                        <div class="setting-item">
+                            <label for="cautionThreshold">Caution Level (dB)</label>
+                            <input type="number" id="cautionThreshold" value="70" min="60" max="80">
+                        </div>
+                        <div class="setting-item">
+                            <label for="dangerThreshold">Danger Level (dB)</label>
+                            <input type="number" id="dangerThreshold" value="85" min="80" max="95">
+                        </div>
+                        <div class="setting-item">
+                            <label for="emergencyThreshold">Emergency Level (dB)</label>
+                            <input type="number" id="emergencyThreshold" value="100" min="95" max="120">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h2>Data Management</h2>
+                        <button id="exportDataBtn" class="btn-secondary">Export Health Data</button>
+                        <button id="clearDataBtn" class="btn-danger">Clear All Data</button>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" hidden>
+        <div class="modal-backdrop"></div>
+        <div class="modal-content alert-modal-content">
+            <div class="alert-icon" id="alertIcon" aria-hidden="true">⚠️</div>
+            <h2 id="alertTitle">Dangerous Noise Detected</h2>
+            <p id="alertMessage" class="alert-message"></p>
+            <div class="alert-details" id="alertDetails"></div>
+            <div class="modal-actions">
+                <button id="dismissAlertBtn" class="btn-primary">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="alerts.js"></script>
+    <script src="reports.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="main.js"></script>
+
+</body>
+</html>
